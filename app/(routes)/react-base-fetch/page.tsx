@@ -24,6 +24,15 @@ const Page = () => {
     }
   }
 
+  const onDelete = async (id: string) => {
+    try {
+      await api.delete(`/todos/${id}`)
+      setTodoList((prev) => prev.filter((todo) => todo.id !== id))
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
     fetchTodos()
   }, [])
