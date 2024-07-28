@@ -87,5 +87,3 @@ export const ServerTodoTitle = ({ id, title, isCompleted }: Props) => {
     </>
   )
 }
-
-export default ServerTodoTitle

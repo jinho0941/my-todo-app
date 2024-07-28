@@ -88,5 +88,3 @@ export const ServerTodoDescription = ({
     </>
   )
 }
-
-export default ServerTodoDescription
