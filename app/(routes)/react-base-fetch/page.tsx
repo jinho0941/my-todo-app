@@ -6,74 +6,54 @@ import { Todo } from '@/type'
 import { useEffect, useState } from 'react'
 import { TodoItem } from './_components/todo-item'
 import { CreateTodoForm } from './_components/create-todo-form'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
-
-interface CreateTodoInput {
-  title: string
-  description: string
-}
 
 const Page = () => {
-  const queryClient = useQueryClient()
+  const [todoList, setTodoList] = useState<Todo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [fetchTime, setFetchTime] = useState<number | null>(null)
 
-  const {
-    data: todoList = [],
-    isLoading,
-    error,
-  } = useQuery<Todo[]>('todos', async (): Promise<Todo[]> => {
-    const start = Date.now()
-    const response = await api.get<Todo[]>('/todos')
-    const end = Date.now()
-    setFetchTime(end - start)
-    return response.data
-  })
-
-  const createTodoMutation = useMutation<Todo, unknown, CreateTodoInput>(
-    async ({ title, description }: CreateTodoInput) => {
-      const response = await api.post<Todo>('/todos', { title, description })
-      return response.data
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('todos')
-      },
-    },
-  )
-
-  const deleteTodoMutation = useMutation<unknown, unknown, string>(
-    async (id: string) => {
-      await api.delete(`/todos/${id}`)
-    },
-    {
-      onSuccess: (_, id) => {
-        queryClient.setQueryData<Todo[]>('todos', (oldTodos) =>
-          oldTodos ? oldTodos.filter((todo) => todo.id !== id) : [],
-        )
-      },
-    },
-  )
+  const fetchTodos = async () => {
+    const startTime = performance.now()
+    try {
+      const response = await api.get<Todo[]>('/todos')
+      setTodoList(response.data)
+    } catch (error) {
+      setError('Error fetching todo list')
+    } finally {
+      const endTime = performance.now()
+      setFetchTime(endTime - startTime)
+      setIsLoading(false)
+    }
+  }
 
   const onCreate = async (title: string, description: string) => {
     try {
-      await createTodoMutation.mutateAsync({ title, description })
+      const response = await api.post('/todos', { title, description })
+      const todo = response.data
+      setTodoList((prev) => [todo, ...prev])
     } catch (error) {
-      console.error(error)
+      console.log(error)
     }
   }
 
   const onDelete = async (id: string) => {
     try {
-      await deleteTodoMutation.mutateAsync(id)
+      await api.delete(`/todos/${id}`)
+      setTodoList((prev) => prev.filter((todo) => todo.id !== id))
     } catch (error) {
-      console.error(error)
+      console.log(error)
     }
   }
+
+  useEffect(() => {
+    fetchTodos()
+  }, [])
 
   if (error) {
     return (
       <div className='bg-stone-200 min-h-screen text-black flex justify-center items-center'>
-        Error: {(error as Error).message}
+        Error: {error}
       </div>
     )
   }
