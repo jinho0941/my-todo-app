@@ -3,7 +3,7 @@
 import { api } from '@/app/utils'
 import { Loading } from '@/components/loading'
 import { Todo } from '@/type'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { TodoItem } from './_components/todo-item'
 import { CreateTodoForm } from './_components/create-todo-form'
 import { useMutation, useQuery, useQueryClient } from 'react-query'

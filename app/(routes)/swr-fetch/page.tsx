@@ -6,54 +6,57 @@ import { Todo } from '@/type'
 import { useEffect, useState } from 'react'
 import { TodoItem } from './_components/todo-item'
 import { CreateTodoForm } from './_components/create-todo-form'
+import useSWR, { mutate } from 'swr'
+import { toast } from 'sonner'
+
+const fetcher = async (url: string) => {
+  const startTime = performance.now()
+  const response = await api.get(url)
+  const endTime = performance.now()
+  const fetchTime = endTime - startTime
+  return { data: response.data, fetchTime }
+}
 
 const Page = () => {
-  const [todoList, setTodoList] = useState<Todo[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, isLoading } = useSWR<{
+    data: Todo[]
+    fetchTime: number
+  }>('/todos', fetcher)
   const [fetchTime, setFetchTime] = useState<number | null>(null)
 
-  const fetchTodos = async () => {
-    const startTime = performance.now()
-    try {
-      const response = await api.get<Todo[]>('/todos')
-      setTodoList(response.data)
-    } catch (error) {
-      setError('Error fetching todo list')
-    } finally {
-      const endTime = performance.now()
-      setFetchTime(endTime - startTime)
-      setIsLoading(false)
+  useEffect(() => {
+    if (data) {
+      setFetchTime(data.fetchTime)
     }
-  }
+  }, [data])
 
   const onCreate = async (title: string, description: string) => {
     try {
       const response = await api.post('/todos', { title, description })
-      const todo = response.data
-      setTodoList((prev) => [todo, ...prev])
+      const newTodo = response.data
+      mutate('/todos', (todos = []) => [newTodo, ...todos], false)
     } catch (error) {
-      console.log(error)
+      toast.error('생성 실패')
     }
   }
 
   const onDelete = async (id: string) => {
     try {
       await api.delete(`/todos/${id}`)
-      setTodoList((prev) => prev.filter((todo) => todo.id !== id))
+      mutate(
+        '/todos',
+        (todos = []) => todos.filter((todo: Todo) => todo.id !== id),
+        false,
+      )
     } catch (error) {
-      console.log(error)
+      toast.error('삭제 실패')
     }
   }
-
-  useEffect(() => {
-    fetchTodos()
-  }, [])
 
   if (error) {
     return (
       <div className='bg-stone-200 min-h-screen text-black flex justify-center items-center'>
-        Error: {error}
+        Error: {error.message}
       </div>
     )
   }
@@ -69,7 +72,7 @@ const Page = () => {
             <span className='font-bold'>{fetchTime.toFixed(2)} ms</span>
           </div>
         )}
-        {todoList.map((todo) => (
+        {data?.data.map((todo) => (
           <TodoItem
             key={todo.id}
             id={todo.id}
