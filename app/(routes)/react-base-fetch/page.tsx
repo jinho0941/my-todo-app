@@ -5,6 +5,7 @@ import { Loading } from '@/components/loading'
 import { Todo } from '@/type'
 import { useEffect, useState } from 'react'
 import { TodoItem } from './_components/todo-item'
+import { CreateTodoForm } from './_components/create-todo-form'
 
 const Page = () => {
   const [todoList, setTodoList] = useState<Todo[]>([])
@@ -23,6 +24,16 @@ const Page = () => {
       const endTime = performance.now()
       setFetchTime(endTime - startTime)
       setIsLoading(false)
+    }
+  }
+
+  const onCreate = async (title: string, description: string) => {
+    try {
+      const response = await api.post('/todos', { title, description })
+      const todo = response.data
+      setTodoList((prev) => [todo, ...prev])
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -49,6 +60,7 @@ const Page = () => {
 
   return (
     <div className='flex flex-col gap-y-2'>
+      <CreateTodoForm onCreate={onCreate} />
       <ul className='h-[300px] w-[300px] overflow-y-scroll overflow-x-hidden p-2 bg-slate-100 rounded-md space-y-4 relative'>
         {isLoading && <Loading />}
         {!isLoading && fetchTime !== null && (
