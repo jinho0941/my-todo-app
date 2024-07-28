@@ -1,6 +1,7 @@
 import { api } from '@/app/utils'
 import { Todo } from '@/type'
 import { ServerTodoItem } from './_components/todo-item'
+import { ServerCreateTodoForm } from './_components/create-todo-form'
 
 const fetchTodo = async () => {
   try {
@@ -17,6 +18,7 @@ const Page = async () => {
 
   return (
     <div className='flex flex-col gap-y-2'>
+      <ServerCreateTodoForm />
       <ul className='h-[300px] w-[300px] overflow-y-scroll overflow-x-hidden p-2 bg-slate-100 rounded-md space-y-4'>
         {todoList.map((todo) => (
           <ServerTodoItem
