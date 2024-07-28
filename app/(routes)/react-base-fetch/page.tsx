@@ -1,8 +1,10 @@
 'use client'
 
 import { api } from '@/app/utils'
+import { Loading } from '@/components/loading'
 import { Todo } from '@/type'
 import { useEffect, useState } from 'react'
+import { TodoItem } from './_components/todo-item'
 
 const Page = () => {
   const [todoList, setTodoList] = useState<Todo[]>([])
@@ -37,7 +39,37 @@ const Page = () => {
     fetchTodos()
   }, [])
 
-  return <div></div>
+  if (error) {
+    return (
+      <div className='bg-stone-200 min-h-screen text-black flex justify-center items-center'>
+        Error: {error}
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex flex-col gap-y-2'>
+      <ul className='h-[300px] w-[300px] overflow-y-scroll overflow-x-hidden p-2 bg-slate-100 rounded-md space-y-4 relative'>
+        {isLoading && <Loading />}
+        {!isLoading && fetchTime !== null && (
+          <div className='text-gray-500 text-sm'>
+            Fetch time:{' '}
+            <span className='font-bold'>{fetchTime.toFixed(2)} ms</span>
+          </div>
+        )}
+        {todoList.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            id={todo.id}
+            title={todo.title}
+            description={todo.description}
+            onDelete={onDelete}
+            completed={todo.completed}
+          />
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 export default Page
